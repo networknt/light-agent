@@ -1,0 +1,5 @@
+PyYAML
+selenium
+jinja2
+google-generativeai
+playwright
