@@ -134,7 +134,9 @@ class WorkflowExecutor:
             if os.name == 'posix':
                 if os.uname().sysname == 'Darwin':
                     # macOS
-                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to tell application "System Events" to keystroke "t" using command down'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    process.communicate()
+                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash" in selected tab of the front window'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                     stdout, stderr = process.communicate()
                     if stderr:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
@@ -142,7 +144,7 @@ class WorkflowExecutor:
 
                 else:
                     # Linux
-                    process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    process = subprocess.Popen(['tmux', 'new-window', '-d', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                     stdout, stderr = process.communicate()
                     if stderr:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
