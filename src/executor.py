@@ -175,10 +175,10 @@ class WorkflowExecutor:
               self.context[step.get('id') + '.output'] = output # storing the gemini result in context.
               self.logger.info(f"Gemini Output: {output}")
               with open(output_path, 'w') as f:
-                 f.write(output)
+                f.write(output)
 
         except Exception as e:
-             self.logger.error(f"Error analyzing with Gemini : {e}")
+            self.logger.error(f"Error analyzing with Gemini : {e}")
 
     def _execute_condition(self, step):
          condition = self._resolve_template(step.get('condition'))
