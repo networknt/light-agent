@@ -134,6 +134,7 @@ class WorkflowExecutor:
         if directory:
             command = f"cd {directory} && {command}"
         self.logger.info(f"Executing system command: {command}")
+        output_source = step.get('output_source', 'console')
         try:
             if os.name == 'posix':
                 if os.uname().sysname == 'Darwin':
@@ -144,7 +145,8 @@ class WorkflowExecutor:
                     stdout, stderr = process.communicate()
                     if stderr:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
-                    self.logger.info(f"System command stdout: {stdout.strip()}")
+                    if output_source == 'console':
+                        self.logger.info(f"System command stdout: {stdout.strip()}")
 
                 else:
                     # Linux
@@ -157,16 +159,24 @@ class WorkflowExecutor:
                     stdout, stderr = process.communicate()
                     if stderr:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
-                    self.logger.info(f"System command stdout: {stdout.strip()}")
+                    if output_source == 'console':
+                        self.logger.info(f"System command stdout: {stdout.strip()}")
             else:
                 # Other OS
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = process.communicate()
                 if stderr:
                     self.logger.warning(f"System command stderr: {stderr.strip()}")
-                self.logger.info(f"System command stdout: {stdout.strip()}")
+                if output_source == 'console':
+                    self.logger.info(f"System command stdout: {stdout.strip()}")
             if step.get('id'):
-                self.context[step.get('id') + '.output'] = stdout.strip()
+                if output_source == 'console':
+                    self.context[step.get('id') + '.output'] = stdout.strip()
+                elif output_source == 'log':
+                    output_path = os.path.join(self.output_dir,step.get('output_path'))
+                    with open(output_path, 'w') as f:
+                        f.write(stdout)
+                    self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
