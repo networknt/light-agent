@@ -126,12 +126,38 @@ class WorkflowExecutor:
         command = self._resolve_template(step.get('command'))
         self.logger.info(f"Executing system command: {command}")
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout, stderr = process.communicate()
-            self.context[step.get('id') + '.output'] = stdout.strip() # setting to the context so that it can be passed to other steps
-            if stderr:
-               self.logger.warning(f"System command stderr: {stderr.strip()}")
-            self.logger.info(f"System command stdout: {stdout.strip()}")
+            if command.startswith("cd "):
+                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = process.communicate()
+                if stderr:
+                    self.logger.warning(f"System command stderr: {stderr.strip()}")
+                self.logger.info(f"System command stdout: {stdout.strip()}")
+
+            else:
+                if os.name == 'posix':
+                    if os.uname().sysname == 'Darwin':
+                        # macOS
+                        process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        stdout, stderr = process.communicate()
+                        if stderr:
+                            self.logger.warning(f"System command stderr: {stderr.strip()}")
+                        self.logger.info(f"System command stdout: {stdout.strip()}")
+
+                    else:
+                        # Linux
+                        process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        stdout, stderr = process.communicate()
+                        if stderr:
+                            self.logger.warning(f"System command stderr: {stderr.strip()}")
+                        self.logger.info(f"System command stdout: {stdout.strip()}")
+                else:
+                    # Other OS
+                    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    stdout, stderr = process.communicate()
+                    if stderr:
+                        self.logger.warning(f"System command stderr: {stderr.strip()}")
+                    self.logger.info(f"System command stdout: {stdout.strip()}")
+            self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
