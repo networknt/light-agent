@@ -161,6 +161,11 @@ class WorkflowExecutor:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
                     if output_source == 'console':
                         self.logger.info(f"System command stdout: {stdout.strip()}")
+                    elif output_source == 'log':
+                        output_path = os.path.join(self.output_dir,step.get('output_path'))
+                        with open(output_path, 'w') as f:
+                            f.write(stdout)
+                        self.logger.info(f"System command stdout: {stdout.strip()}")
             else:
                 # Other OS
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -169,14 +174,17 @@ class WorkflowExecutor:
                     self.logger.warning(f"System command stderr: {stderr.strip()}")
                 if output_source == 'console':
                     self.logger.info(f"System command stdout: {stdout.strip()}")
-            if step.get('id'):
-                if output_source == 'console':
-                    self.context[step.get('id') + '.output'] = stdout.strip()
                 elif output_source == 'log':
                     output_path = os.path.join(self.output_dir,step.get('output_path'))
                     with open(output_path, 'w') as f:
                         f.write(stdout)
+                    self.logger.info(f"System command stdout: {stdout.strip()}")
+            if step.get('id'):
+                if output_source == 'console':
                     self.context[step.get('id') + '.output'] = stdout.strip()
+                elif output_source == 'log':
+                    self.context[step.get('id') + '.output'] = stdout.strip()
+
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
