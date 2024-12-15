@@ -14,13 +14,15 @@ def main():
     parser.add_argument(
         "--api_key",
         type=str,
-        required=True,
+        required=False,
         help="Gemini API key"
     )
     args = parser.parse_args()
 
     workflow_file = args.workflow
-    api_key = args.api_key
+    api_key = args.api_key if args.api_key else os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("Gemini API key not provided via --api_key or GEMINI_API_KEY environment variable")
     log_dir = os.path.join(os.getcwd(), 'logs')
     output_dir = os.path.join(os.getcwd(),'output')
 
