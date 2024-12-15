@@ -144,6 +144,11 @@ class WorkflowExecutor:
 
                 else:
                     # Linux
+                    try:
+                        subprocess.run(['tmux', 'ls'], check=True, capture_output=True)
+                    except subprocess.CalledProcessError:
+                        # tmux server is not running, start one
+                        subprocess.run(['tmux', 'new-session', '-d'], check=True)
                     process = subprocess.Popen(['tmux', 'new-window', '-d', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                     stdout, stderr = process.communicate()
                     if stderr:
