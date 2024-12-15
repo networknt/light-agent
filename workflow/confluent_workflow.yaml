@@ -58,14 +58,17 @@ workflow:
     - id: "step_11"
       name: "Navigate to light-scheduler directory"
       type: "system_command"
-      command: "cd ~/lightapi/portal-config-loc/light-scheduler"
+      directory: "~/lightapi/portal-config-loc/light-scheduler"
+      command: ""
 
     - id: "step_12"
       name: "Docker compose down"
       type: "system_command"
+      directory: "~/lightapi/portal-config-loc/light-scheduler"
       command: "docker compose down"
 
     - id: "step_13"
       name: "Docker compose up"
       type: "system_command"
+      directory: "~/lightapi/portal-config-loc/light-scheduler"
       command: "docker compose up"

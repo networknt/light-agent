@@ -126,42 +126,34 @@ class WorkflowExecutor:
 
     def _execute_system_command(self, step):
         command = self._resolve_template(step.get('command'))
+        directory = self._resolve_template(step.get('directory'))
+        if directory:
+            command = f"cd {directory} && {command}"
         self.logger.info(f"Executing system command: {command}")
         try:
-            if command.startswith("cd "):
+            if os.name == 'posix':
+                if os.uname().sysname == 'Darwin':
+                    # macOS
+                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    stdout, stderr = process.communicate()
+                    if stderr:
+                        self.logger.warning(f"System command stderr: {stderr.strip()}")
+                    self.logger.info(f"System command stdout: {stdout.strip()}")
+
+                else:
+                    # Linux
+                    process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    stdout, stderr = process.communicate()
+                    if stderr:
+                        self.logger.warning(f"System command stderr: {stderr.strip()}")
+                    self.logger.info(f"System command stdout: {stdout.strip()}")
+            else:
+                # Other OS
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = process.communicate()
                 if stderr:
                     self.logger.warning(f"System command stderr: {stderr.strip()}")
                 self.logger.info(f"System command stdout: {stdout.strip()}")
-
-            else:
-                if os.name == 'posix':
-                    if os.uname().sysname == 'Darwin':
-                        # macOS
-                        process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                        stdout, stderr = process.communicate()
-                        if stderr:
-                            self.logger.warning(f"System command stderr: {stderr.strip()}")
-                        self.logger.info(f"System command stdout: {stdout.strip()}")
-
-                    else:
-                        # Linux
-                        if command.startswith("cd "):
-                            process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                        else:
-                            process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                        stdout, stderr = process.communicate()
-                        if stderr:
-                            self.logger.warning(f"System command stderr: {stderr.strip()}")
-                        self.logger.info(f"System command stdout: {stdout.strip()}")
-                else:
-                    # Other OS
-                    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    stdout, stderr = process.communicate()
-                    if stderr:
-                        self.logger.warning(f"System command stderr: {stderr.strip()}")
-                    self.logger.info(f"System command stdout: {stdout.strip()}")
             if step.get('id'):
                 self.context[step.get('id') + '.output'] = stdout.strip()
 
