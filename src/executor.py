@@ -59,6 +59,8 @@ class WorkflowExecutor:
          step_type = step.get('type')
          step_id = step.get('id')
          try:
+           if step_id:
+              self.context[step_id + '.output'] = "" # Initialize the output in context before execution
            if step_type == 'browser_action':
                  self._execute_browser_action(step)
            elif step_type == 'system_command':
@@ -137,7 +139,7 @@ class WorkflowExecutor:
                 if os.name == 'posix':
                     if os.uname().sysname == 'Darwin':
                         # macOS
-                        process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash"'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                         stdout, stderr = process.communicate()
                         if stderr:
                             self.logger.warning(f"System command stderr: {stderr.strip()}")
@@ -145,7 +147,7 @@ class WorkflowExecutor:
 
                     else:
                         # Linux
-                        process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                         stdout, stderr = process.communicate()
                         if stderr:
                             self.logger.warning(f"System command stderr: {stderr.strip()}")
@@ -157,7 +159,8 @@ class WorkflowExecutor:
                     if stderr:
                         self.logger.warning(f"System command stderr: {stderr.strip()}")
                     self.logger.info(f"System command stdout: {stdout.strip()}")
-            self.context[step.get('id') + '.output'] = stdout.strip()
+            if step.get('id'):
+                self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
