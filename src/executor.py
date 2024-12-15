@@ -147,7 +147,10 @@ class WorkflowExecutor:
 
                     else:
                         # Linux
-                        process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        if command.startswith("cd "):
+                            process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        else:
+                            process = subprocess.Popen(['gnome-terminal', '--', 'bash', '-c', f'{command}; bash'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                         stdout, stderr = process.communicate()
                         if stderr:
                             self.logger.warning(f"System command stderr: {stderr.strip()}")
