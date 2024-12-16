@@ -55,9 +55,9 @@ class WorkflowExecutor:
         except FileNotFoundError:
             self.logger.error(f"Workflow file not found: {workflow_file}")
             return
-        workflow_id = self.workflow_data.get('id')
+        workflow_id = self.workflow_data.get('workflow',{}).get('id')
         self.logger.info(f"Workflow id: {workflow_id}")
-        workflow_version = self.workflow_data.get('version').replace('.', '_')
+        workflow_version = self.workflow_data.get('workflow',{}).get('version').replace('.', '_')
         self.logger.info(f"Workflow version: {workflow_version}")
         self.workflow_output_dir = os.path.join(self.output_dir, workflow_id, workflow_version)
         create_directory(self.workflow_output_dir)
