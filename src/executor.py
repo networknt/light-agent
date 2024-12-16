@@ -187,13 +187,18 @@ class WorkflowExecutor:
             command = f"cd {directory} && {command}"
         self.logger.info(f"Executing system command: {command}")
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout = ""
-            stderr = ""
             if command.strip().endswith("&"):
-                # Do not read stdout or stderr for background processes
-                self.logger.info(f"Background process started, not reading output")
+                # Remove nohup and redirect output to a log file
+                command = command.replace("nohup ", "").strip()
+                log_file = os.path.join(self.log_dir, f"background_process_{random.randint(1000, 9999)}.log")
+                command = f"{command} > {log_file} 2>&1"
+                self.logger.info(f"Executing background command: {command}")
+                process = subprocess.Popen(command, shell=True)
+                self.logger.info(f"Background process started, output redirected to {log_file}")
+                stdout = ""
+                stderr = ""
             else:
+                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = process.communicate()
                 if stderr:
                     self.logger.warning(f"System command stderr: {stderr.strip()}")
