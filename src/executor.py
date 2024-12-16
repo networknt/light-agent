@@ -134,52 +134,21 @@ class WorkflowExecutor:
         if directory:
             command = f"cd {directory} && {command}"
         self.logger.info(f"Executing system command: {command}")
-        output_source = step.get('output_source', 'console')
         try:
-            if os.name == 'posix':
-                if os.uname().sysname == 'Darwin':
-                    # macOS
-                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to tell application "System Events" to keystroke "t" using command down'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    process.communicate()
-                    process = subprocess.Popen(['osascript', '-e', f'tell application "Terminal" to do script "{command}; bash" in selected tab of the front window'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    stdout, stderr = process.communicate()
-                    if stderr:
-                        self.logger.warning(f"System command stderr: {stderr.strip()}")
-                    if output_source == 'console':
-                        self.logger.info(f"System command stdout: {stdout.strip()}")
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = process.communicate()
+            if stderr:
+                self.logger.warning(f"System command stderr: {stderr.strip()}")
+            self.logger.info(f"System command stdout: {stdout.strip()}")
 
-                else:
-                    # Linux
-                    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    stdout, stderr = process.communicate()
-                    if stderr:
-                        self.logger.warning(f"System command stderr: {stderr.strip()}")
-                    if output_source == 'console':
-                        self.logger.info(f"System command stdout: {stdout.strip()}")
-                    elif output_source == 'log':
-                        output_path = os.path.join(self.output_dir,step.get('output_path'))
-                        with open(output_path, 'w') as f:
-                            f.write(stdout)
-                        self.logger.info(f"System command stdout: {stdout.strip()}")
-            else:
-                # Other OS
-                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                stdout, stderr = process.communicate()
-                if stderr:
-                    self.logger.warning(f"System command stderr: {stderr.strip()}")
-                if output_source == 'console':
-                    self.logger.info(f"System command stdout: {stdout.strip()}")
-                elif output_source == 'log':
-                    output_path = os.path.join(self.output_dir,step.get('output_path'))
-                    with open(output_path, 'w') as f:
-                        f.write(stdout)
-                    self.logger.info(f"System command stdout: {stdout.strip()}")
+            output_path = step.get('output_path')
+            if output_path:
+                output_path = os.path.join(self.output_dir, output_path)
+                with open(output_path, 'w') as f:
+                    f.write(stdout)
+
             if step.get('id'):
-                if output_source == 'console':
-                    self.context[step.get('id') + '.output'] = stdout.strip()
-                elif output_source == 'log':
-                    self.context[step.get('id') + '.output'] = stdout.strip()
-
+                self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
