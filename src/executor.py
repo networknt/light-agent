@@ -71,48 +71,50 @@ class WorkflowExecutor:
              if step.get('type') != 'goto':
                  self.current_step_index +=1 # Increment only if it is not a goto step.
 
-    def _execute_step(self, step):
+    def _execute_step(self, step, context = None):
          step_type = step.get('type')
          step_id = step.get('id')
+         if not context:
+            context = self.context
          try:
            if step_id:
-              self.context[step_id + '.output'] = "" # Initialize the output in context before execution
+              context[step_id + '.output'] = "" # Initialize the output in context before execution
            if step_type == 'system_command':
-                  self._execute_system_command(step)
+                  self._execute_system_command(step, context)
            if step_id:
-              self.context[step_id + '.output'] = self.context.get(step_id + '.output',"") # Update the context before execution
+              context[step_id + '.output'] = context.get(step_id + '.output',"") # Update the context before execution
            elif step_type == 'parallel_for_each':
               self._update_context_before_step(step)
            if step_type == 'browser_action':
-                 self._execute_browser_action(step)
+                 self._execute_browser_action(step, context)
            elif step_type == 'system_command':
-                  self._execute_system_command(step)
+                  self._execute_system_command(step, context)
            elif step_type == 'gemini_analyze':
-                self._execute_gemini_analyze(step)
+                self._execute_gemini_analyze(step, context)
            elif step_type == 'condition':
-               self._execute_condition(step)
+               self._execute_condition(step, context)
            elif step_type == 'notification':
-                self._execute_notification(step)
+                self._execute_notification(step, context)
            elif step_type == 'for_loop':
-                self._execute_for_loop(step)
+                self._execute_for_loop(step, context)
            elif step_type == 'while_loop':
-                self._execute_while_loop(step)
+                self._execute_while_loop(step, context)
            elif step_type == 'do_while_loop':
-               self._execute_do_while_loop(step)
+               self._execute_do_while_loop(step, context)
            elif step_type == 'set_variable':
-               self._execute_set_variable(step)
+               self._execute_set_variable(step, context)
            elif step_type == 'increment_variable':
-               self._execute_increment_variable(step)
+               self._execute_increment_variable(step, context)
            elif step_type == 'goto':
-              self._execute_goto(step)
+              self._execute_goto(step, context)
            elif step_type == 'parallel_for_each':
-             self._execute_parallel_for_each(step)
+             self._execute_parallel_for_each(step, context)
            elif step_type == 'parallel_and_branch':
-              self._execute_parallel_and_branch(step)
+              self._execute_parallel_and_branch(step, context)
            elif step_type == 'parallel_or_branch':
-              self._execute_parallel_or_branch(step)
+              self._execute_parallel_or_branch(step, context)
            elif step_type == 'split_list':
-              self._execute_split_list(step)
+              self._execute_split_list(step, context)
            elif step_type == 'label':
               pass #do nothing
            else:
@@ -130,7 +132,7 @@ class WorkflowExecutor:
                         self.logger.info(f"Updated context with previous step output {previous_step.get('id')}")
                 break
 
-    def _execute_browser_action(self, step):
+    def _execute_browser_action(self, step, context):
         action = step.get('action')
         if action == 'navigate':
            url = self._resolve_template(step.get('url'))
@@ -178,7 +180,7 @@ class WorkflowExecutor:
             browser.close()
 
 
-    def _execute_system_command(self, step):
+    def _execute_system_command(self, step, context):
         command = self._resolve_template(step.get('command'))
         directory = self._resolve_template(step.get('directory'))
         if directory:
@@ -195,12 +197,12 @@ class WorkflowExecutor:
                 output_path = os.path.join(self.workflow_output_dir, f"{step.get('id')}.txt")
                 with open(output_path, 'w') as f:
                     f.write(stdout)
-                self.context[step.get('id') + '.output'] = stdout.strip()
+                context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
 
-    def _execute_gemini_analyze(self, step):
+    def _execute_gemini_analyze(self, step, context):
         input_data = self._resolve_template(step.get('input'))
         prompt = self._resolve_template(step.get('prompt'))
         output_path = os.path.join(self.output_dir,step.get('output_path'))
@@ -210,7 +212,7 @@ class WorkflowExecutor:
               model = genai.GenerativeModel('gemini-pro')
               response = model.generate_content(prompt + " " + input_data)
               output = response.text.strip()
-              self.context[step.get('id') + '.output'] = output # storing the gemini result in context.
+              context[step.get('id') + '.output'] = output # storing the gemini result in context.
               self.logger.info(f"Gemini Output: {output}")
               if step.get('id'):
                   output_path = os.path.join(self.workflow_output_dir, f"{step.get('id')}.txt")
@@ -220,7 +222,7 @@ class WorkflowExecutor:
         except Exception as e:
             self.logger.error(f"Error analyzing with Gemini : {e}")
 
-    def _execute_condition(self, step):
+    def _execute_condition(self, step, context):
          condition = self._resolve_template(step.get('condition'))
          self.logger.info(f"Evaluating condition {condition}")
          try:
@@ -228,17 +230,17 @@ class WorkflowExecutor:
                 self.logger.info(f"Condition {condition} evaluated to True")
                 then_steps = step.get('then',[])
                 for then_step in then_steps:
-                   self._execute_step(then_step)
+                   self._execute_step(then_step, context)
               else:
                 self.logger.info(f"Condition {condition} evaluated to False")
                 else_steps = step.get('else',[])
                 for else_step in else_steps:
-                    self._execute_step(else_step)
+                    self._execute_step(else_step, context)
 
          except Exception as e:
                 self.logger.error(f"Error evaluating condition {condition}, {e}")
 
-    def _execute_notification(self, step):
+    def _execute_notification(self, step, context):
        message = self._resolve_template(step.get('message'))
        self.logger.info(f"Sending notification: {message}")
        try:
@@ -246,7 +248,7 @@ class WorkflowExecutor:
            print(f"Notification Sent: {message}")
        except Exception as e:
               self.logger.error(f"Error sending notification message : {e}")
-    def _execute_for_loop(self, step):
+    def _execute_for_loop(self, step, context):
         loop_variable = step.get('variable')
         start = int(step.get('start'))
         end = int(step.get('end'))
@@ -254,26 +256,26 @@ class WorkflowExecutor:
         loop_steps = step.get('steps', [])
         self.logger.info(f"Executing for loop with {loop_variable}, start: {start}, end:{end}, increment: {increment}")
         for i in range(start, end, increment):
-            self.context[loop_variable] = i
+            context[loop_variable] = i
             for loop_step in loop_steps:
-                self._execute_step(loop_step)
+                self._execute_step(loop_step, context)
 
 
-    def _execute_while_loop(self, step):
+    def _execute_while_loop(self, step, context):
           condition = self._resolve_template(step.get('condition'))
           loop_steps = step.get('steps',[])
           self.logger.info(f"Executing while loop with condition: {condition}")
           try:
                while eval(condition):
                    for loop_step in loop_steps:
-                      self._execute_step(loop_step)
+                      self._execute_step(loop_step, context)
                    condition = self._resolve_template(step.get('condition'))  # Refresh the condition after loop iteration.
                self.logger.info(f"While loop terminated with condition {condition} becoming false")
           except Exception as e:
              self.logger.error(f"Error while loop execution: {e}")
 
 
-    def _execute_do_while_loop(self, step):
+    def _execute_do_while_loop(self, step, context):
         condition = self._resolve_template(step.get('condition'))
         loop_steps = step.get('steps', [])
         self.logger.info(f"Executing do-while loop with condition: {condition}")
@@ -281,7 +283,7 @@ class WorkflowExecutor:
         try:
             while True:
               for loop_step in loop_steps:
-                self._execute_step(loop_step)
+                self._execute_step(loop_step, context)
               condition = self._resolve_template(step.get('condition')) # Refresh the condition after loop iteration.
               if not eval(condition):
                   break
@@ -290,22 +292,22 @@ class WorkflowExecutor:
         except Exception as e:
              self.logger.error(f"Error do-while loop execution: {e}")
 
-    def _execute_set_variable(self, step):
+    def _execute_set_variable(self, step, context):
         variable = step.get('variable')
         value = self._resolve_template(step.get('value'))
         self.logger.info(f"Setting variable: {variable} to value {value}")
-        self.context[variable] = value
+        context[variable] = value
 
-    def _execute_increment_variable(self, step):
+    def _execute_increment_variable(self, step, context):
         variable = step.get('variable')
         amount = int(step.get('amount'))
         self.logger.info(f"Incrementing variable: {variable} by {amount}")
-        if variable in self.context:
-           self.context[variable] = int(self.context[variable]) + amount
+        if variable in context:
+           context[variable] = int(context[variable]) + amount
         else:
             self.logger.warning(f"Variable not set {variable} and set to default value 0")
-            self.context[variable] = amount
-    def _execute_goto(self, step):
+            context[variable] = amount
+    def _execute_goto(self, step, context):
         target = step.get('target')
         self.logger.info(f"Executing goto : {target}")
         steps = self.workflow_data.get('workflow', {}).get('steps', [])
@@ -315,7 +317,7 @@ class WorkflowExecutor:
               return
         self.logger.warning(f"Goto target {target} not found in the workflow")
 
-    def _execute_split_list(self, step):
+    def _execute_split_list(self, step, context):
          list_source = self._resolve_template(step.get('list_source'))
          if isinstance(list_source, str) :
              self.logger.warning(f"list_source is a string rather than list")
@@ -323,7 +325,7 @@ class WorkflowExecutor:
          groups = step.get('groups',{})
          self.logger.info(f"Spliting the list into groups {groups}")
          group_list = self._split_list_by_percentage(list_source,groups)
-         self.context[step.get('id') + '.output_groups'] = group_list # add to the context for future steps
+         context[step.get('id') + '.output_groups'] = group_list # add to the context for future steps
 
     def _split_list_by_percentage(self, items, group_percentages):
          shuffled_items = list(items)
@@ -347,7 +349,7 @@ class WorkflowExecutor:
 
 
          return groups
-    def _execute_parallel_for_each(self, step):
+    def _execute_parallel_for_each(self, step, context):
         list_source = self._resolve_template(step.get('list_source'))
         item_variable = step.get('item_variable')
         loop_steps = step.get('steps',[])
@@ -359,30 +361,30 @@ class WorkflowExecutor:
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = []
             for item in list_source:
-                self.context[item_variable] = item
-                future = executor.submit(self._execute_steps_list_in_branch,loop_steps,self.context)
+                context[item_variable] = item
+                future = executor.submit(self._execute_steps_list_in_branch,loop_steps,context)
                 futures.append(future)
             concurrent.futures.wait(futures) # Wait for all threads to finish.
 
-    def _execute_parallel_and_branch(self, step):
+    def _execute_parallel_and_branch(self, step, context):
         branches = step.get('branches',[])
         self.logger.info(f"Executing parallel and branches ")
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = []
             for branch in branches:
                 branch_steps = branch.get('steps',[])
-                future = executor.submit(self._execute_steps_list_in_branch,branch_steps)
+                future = executor.submit(self._execute_steps_list_in_branch,branch_steps, context)
                 futures.append(future)
             concurrent.futures.wait(futures) # Wait for all threads to finish.
 
-    def _execute_parallel_or_branch(self, step):
+    def _execute_parallel_or_branch(self, step, context):
          branches = step.get('branches',[])
          self.logger.info(f"Executing parallel or branches ")
          with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                 futures = []
                 for branch in branches:
                     branch_steps = branch.get('steps',[])
-                    future = executor.submit(self._execute_steps_list_in_branch,branch_steps)
+                    future = executor.submit(self._execute_steps_list_in_branch,branch_steps, context)
                     futures.append(future)
                 done, _ = concurrent.futures.wait(futures, return_when = concurrent.futures.FIRST_COMPLETED) # Wait for the first thread to complete
                 self.logger.info(f"At least one branch has completed execution")
@@ -391,6 +393,6 @@ class WorkflowExecutor:
     def _execute_steps_list_in_branch(self, steps, context):
         try:
           for step in steps:
-             self._execute_step(step)
+             self._execute_step(step, context)
         except Exception as e:
               self.logger.error(f"Error with branch execution: {e}")
