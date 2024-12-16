@@ -193,7 +193,7 @@ class WorkflowExecutor:
                     file_content = f.read()
                     if step.get('id'):
                         self.context[step.get('id') + '.output'] = file_content.strip()
-            elif step.get('id'):
+            if step.get('id'):
                 self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
