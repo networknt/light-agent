@@ -190,7 +190,13 @@ class WorkflowExecutor:
                 with open(output_path, 'w') as f:
                     f.write(stdout)
 
-            if step.get('id'):
+            if output_path:
+                output_path = os.path.join(self.output_dir, output_path)
+                with open(output_path, 'r') as f:
+                    file_content = f.read()
+                    if step.get('id'):
+                        self.context[step.get('id') + '.output'] = file_content.strip()
+            elif step.get('id'):
                 self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
