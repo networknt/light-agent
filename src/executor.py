@@ -189,13 +189,13 @@ class WorkflowExecutor:
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             if command.strip().endswith("&"):
-                stdout = process.stdout.read()
-                stderr = process.stderr.read()
+                # Do not read stdout or stderr for background processes
+                self.logger.info(f"Background process started, not reading output")
             else:
                 stdout, stderr = process.communicate()
-            if stderr:
-                self.logger.warning(f"System command stderr: {stderr.strip()}")
-            self.logger.info(f"System command stdout: {stdout.strip()}")
+                if stderr:
+                    self.logger.warning(f"System command stderr: {stderr.strip()}")
+                self.logger.info(f"System command stdout: {stdout.strip()}")
 
             if step.get('id'):
                 output_path = os.path.join(self.workflow_output_dir, f"{step.get('id')}.txt")
