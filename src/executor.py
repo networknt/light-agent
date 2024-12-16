@@ -182,22 +182,15 @@ class WorkflowExecutor:
             stdout, stderr = process.communicate()
             if stderr:
                 self.logger.warning(f"System command stderr: {stderr.strip()}")
-            
+            self.logger.info(f"System command stdout: {stdout.strip()}")
+
             output_path = step.get('output_path')
             if output_path:
                 output_path = os.path.join(self.output_dir, output_path)
-                with open(output_path, 'a') as f:
+                with open(output_path, 'w') as f:
                     f.write(stdout)
-                with open(output_path, 'r') as f:
-                    file_content = f.read()
-                    self.logger.info(f"System command stdout: {stdout.strip()}, file content: {file_content.strip()}")
-                    if step.get('id'):
-                        self.context[step.get('id') + '.output'] = file_content.strip()
-            else:
-                self.logger.info(f"System command stdout: {stdout.strip()}")
-                if step.get('id'):
-                    self.context[step.get('id') + '.output'] = stdout.strip()
-
+            if step.get('id'):
+                self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
