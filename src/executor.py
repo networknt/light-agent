@@ -361,8 +361,9 @@ class WorkflowExecutor:
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = []
             for item in list_source:
-                context[item_variable] = item
-                future = executor.submit(self._execute_steps_list_in_branch,loop_steps,context)
+                item_context = context.copy()
+                item_context[item_variable] = item
+                future = executor.submit(self._execute_steps_list_in_branch,loop_steps,item_context)
                 futures.append(future)
             concurrent.futures.wait(futures) # Wait for all threads to finish.
 
