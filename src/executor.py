@@ -55,6 +55,10 @@ class WorkflowExecutor:
         except FileNotFoundError:
             self.logger.error(f"Workflow file not found: {workflow_file}")
             return
+        workflow_id = self.workflow_data.get('id', 'default_id')
+        workflow_version = self.workflow_data.get('version', 'default_version').replace('.', '_')
+        self.workflow_output_dir = os.path.join(self.output_dir, workflow_id, workflow_version)
+        create_directory(self.workflow_output_dir)
 
         steps = self.workflow_data.get('workflow', {}).get('steps', [])
         self.current_step_index = 0; # reset the current step index
@@ -184,12 +188,10 @@ class WorkflowExecutor:
                 self.logger.warning(f"System command stderr: {stderr.strip()}")
             self.logger.info(f"System command stdout: {stdout.strip()}")
 
-            output_path = step.get('output_path')
-            if output_path:
-                output_path = os.path.join(self.output_dir, output_path)
+            if step.get('id'):
+                output_path = os.path.join(self.workflow_output_dir, f"{step.get('id')}.txt")
                 with open(output_path, 'w') as f:
                     f.write(stdout)
-            if step.get('id'):
                 self.context[step.get('id') + '.output'] = stdout.strip()
 
         except Exception as e:
@@ -207,8 +209,10 @@ class WorkflowExecutor:
               output = response.text.strip()
               self.context[step.get('id') + '.output'] = output # storing the gemini result in context.
               self.logger.info(f"Gemini Output: {output}")
-              with open(output_path, 'w') as f:
-                f.write(output)
+              if step.get('id'):
+                  output_path = os.path.join(self.workflow_output_dir, f"{step.get('id')}.txt")
+                  with open(output_path, 'w') as f:
+                    f.write(output)
 
         except Exception as e:
             self.logger.error(f"Error analyzing with Gemini : {e}")
