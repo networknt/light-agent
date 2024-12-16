@@ -1,5 +1,5 @@
 PyYAML
 selenium
 jinja2
-google-generativeai
+google-ai-generativelanguage
 playwright
