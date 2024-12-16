@@ -360,7 +360,7 @@ class WorkflowExecutor:
             futures = []
             for item in list_source:
                 self.context[item_variable] = item
-                future = executor.submit(self._execute_steps_list_in_branch,loop_steps)
+                future = executor.submit(self._execute_steps_list_in_branch,loop_steps,self.context)
                 futures.append(future)
             concurrent.futures.wait(futures) # Wait for all threads to finish.
 
@@ -388,7 +388,7 @@ class WorkflowExecutor:
                 self.logger.info(f"At least one branch has completed execution")
 
 
-    def _execute_steps_list_in_branch(self, steps):
+    def _execute_steps_list_in_branch(self, steps, context):
         try:
           for step in steps:
              self._execute_step(step)
