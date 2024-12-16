@@ -394,6 +394,6 @@ class WorkflowExecutor:
     def _execute_steps_list_in_branch(self, steps, context):
         try:
           for step in steps:
-             self._execute_step(step, context)
+             self._execute_step(step,context)
         except Exception as e:
               self.logger.error(f"Error with branch execution: {e}")
