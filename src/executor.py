@@ -189,9 +189,6 @@ class WorkflowExecutor:
                 output_path = os.path.join(self.output_dir, output_path)
                 with open(output_path, 'w') as f:
                     f.write(stdout)
-
-            if output_path:
-                output_path = os.path.join(self.output_dir, output_path)
                 with open(output_path, 'r') as f:
                     file_content = f.read()
                     if step.get('id'):
