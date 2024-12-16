@@ -1,4 +1,6 @@
 workflow:
+  id: "DScluXptQwuosa1I0YUYjA"
+  version: "1.0.0"
   name: "Workflow with List-Based Branching"
   description: "Demonstrates parallel processing of a list"
   steps:
