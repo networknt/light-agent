@@ -127,6 +127,7 @@ class WorkflowExecutor:
                     previous_step = steps[index-1]
                     if previous_step.get('id'):
                         self.context[previous_step.get('id') + '.output'] = self.context.get(previous_step.get('id') + '.output',"")
+                        self.logger.info(f"Updated context with previous step output {previous_step.get('id')}")
                 break
 
     def _execute_browser_action(self, step):

@@ -12,7 +12,7 @@ workflow:
     - id: "branch_1"
       name: "Process each user"
       type: "parallel_for_each"
-      list_source: "{{step_1.output.split(',')}}"
+      list_source: "{{context.step_1.output.split(',')}}"
       item_variable: "user_id"
       steps:
         - id: "branch_step_1"
