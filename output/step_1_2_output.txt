@@ -1,0 +1,16 @@
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+Connect is [UP]
+Control Center is [UP]
+Kafka is [UP]
+Kafka REST is [UP]
+ksqlDB Server is [UP]
+Schema Registry is [UP]
+ZooKeeper is [UP]
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+Connect is [UP]
+Control Center is [UP]
+Kafka is [UP]
+Kafka REST is [UP]
+ksqlDB Server is [UP]
+Schema Registry is [UP]
+ZooKeeper is [UP]

@@ -23,7 +23,7 @@ def main():
     api_key = args.api_key if args.api_key else os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("Gemini API key not provided via --api_key or GEMINI_API_KEY environment variable")
-    log_dir = os.path.join(os.getcwd(), 'logs')
+    log_dir = os.path.join(os.getcwd(), 'log')
     output_dir = os.path.join(os.getcwd(),'output')
 
 

@@ -6,10 +6,16 @@ workflow:
       name: "Start of the workflow"
       type: "system_command"
       command: "echo 'Start Workflow'"
+    - id: "step_0"
+      name: "Set initial value"
+      type: "set_variable"
+      variable: "counter"
+      value: 0
     - id: "step_1"
       name: "First Step"
       type: "system_command"
       command: "echo 'Step 1 executed'"
+
     - id: "condition_1"
       type: "condition"
       condition: "{{ counter < 3}}" # need to create the counter before using this step

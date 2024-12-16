@@ -1,0 +1,76 @@
+workflow:
+  name: "My Automation Workflow"
+  description: "A workflow to automate tasks on a website and analyze results"
+
+  steps:
+    - id: "step_1"
+      name: "Navigate to the homepage"
+      type: "browser_action"
+      action: "navigate"
+      url: "https://example.com"
+
+    - id: "step_2"
+      name: "Enter username and password"
+      type: "browser_action"
+      action: "enter_text"
+      selector: "#username"
+      text: "my_username"
+    - id: "step_3"
+      type: "browser_action"
+      action: "enter_text"
+      selector: "#password"
+      text: "my_password"
+
+    - id: "step_4"
+      name: "Click the Login Button"
+      type: "browser_action"
+      action: "click"
+      selector: "#login-button"
+
+
+    - id: "step_5"
+      name: "Wait for dashboard to load"
+      type: "browser_action"
+      action: "wait"
+      selector: "#dashboard"
+      timeout: 10
+
+    - id: "step_6"
+      name: "Click the download report"
+      type: "browser_action"
+      action: "click"
+      selector: "#download-report"
+
+    - id: "step_7"
+      name: "Wait for download to complete"
+      type: "browser_action"
+       action: "wait"
+      selector: "#download-completed"
+      timeout: 30
+
+    - id: "step_8"
+      name: "Execute system command to check download"
+      type: "system_command"
+      command: "ls -l ~/Downloads/"
+
+    - id: "step_9"
+      name: "Analyze command output with Gemini"
+      type: "gemini_analyze"
+      input: "{{ step_8.output }}" # Using Jinja like template expression to access output of step 8
+      prompt: "Analyze the output from the command and check if the download file is present in the directory. If it's there respond with 'true', otherwise 'false'"
+      output_path : "step_9_gemini.txt"
+
+    - id: "step_10"
+       name : "If downloaded successfully"
+       type: "condition"
+       condition: "{{ step_9.output == 'true'}}"
+       then :
+          - id: "step_11"
+              name: "Move download file to the reports directory"
+              type: "system_command"
+              command: "mv ~/Downloads/report.txt ~/reports/"
+       else :
+           - id: "step_12"
+              name: "Send Notification of failed download"
+              type: "notification"
+              message: "Download Failed"

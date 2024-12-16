@@ -1,0 +1,16 @@
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+Control Center is [DOWN]
+ksqlDB Server is [DOWN]
+Connect is [DOWN]
+Kafka REST is [DOWN]
+Schema Registry is [DOWN]
+Kafka is [DOWN]
+ZooKeeper is [DOWN]
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+Control Center is [DOWN]
+ksqlDB Server is [DOWN]
+Connect is [DOWN]
+Kafka REST is [DOWN]
+Schema Registry is [DOWN]
+Kafka is [DOWN]
+ZooKeeper is [DOWN]

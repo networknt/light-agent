@@ -1,0 +1,23 @@
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+Starting ZooKeeper
+ZooKeeper is [UP]
+Starting Kafka
+Kafka is [UP]
+Starting Schema Registry
+Schema Registry is [UP]
+Starting Kafka REST
+Kafka REST is [UP]
+Starting Connect
+Connect is [UP]
+Starting ksqlDB Server
+ksqlDB Server is [UP]
+Starting Control Center
+Control Center is [UP]
+Using CONFLUENT_CURRENT: /opt/confluent/confluent.603231
+ZooKeeper is [UP]
+Kafka is [UP]
+Schema Registry is [UP]
+Kafka REST is [UP]
+Connect is [UP]
+ksqlDB Server is [UP]
+Control Center is [UP]

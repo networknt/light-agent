@@ -1,0 +1,75 @@
+workflow:
+  name: "Workflow with Loops"
+  description: "Demonstrates loops and conditional steps"
+
+  steps:
+    - id: "step_1"
+      name: "Set initial value"
+      type: "set_variable"
+      variable: "counter"
+      value: 0
+
+    - id: "loop_1"
+      name: "For loop example"
+      type: "for_loop"
+      variable: "i"
+      start: 0
+      end: 3  # Executes from 0 up to 2
+      increment: 1
+      steps:
+        - id: "loop_step_1"
+          name: "Print Loop Counter"
+          type: "system_command"
+          command: "echo 'Loop iteration: {{ i }} ; counter: {{ counter }}'"
+        - id: "loop_step_2"
+          name: "Increment counter variable"
+          type: "increment_variable"
+          variable: "counter"
+          amount: 1
+
+    - id: "step_2"
+      name: "Set initial value for while loop"
+      type: "set_variable"
+      variable: "while_counter"
+      value: 0
+
+    - id: "loop_2"
+      name: "While loop example"
+      type: "while_loop"
+      condition: "{{ while_counter < 3 }}"
+      steps:
+        - id: "loop_step_3"
+          name : "Print while loop counter"
+          type: "system_command"
+          command: "echo 'while loop iteration : {{ while_counter }}'"
+        - id: "loop_step_4"
+          name: "Increment while counter variable"
+          type: "increment_variable"
+          variable: "while_counter"
+          amount: 1
+
+
+    - id: "step_3"
+      name: "Set initial value for do-while loop"
+      type: "set_variable"
+      variable: "do_while_counter"
+      value: 0
+
+    - id: "loop_3"
+      name: "do-while loop example"
+      type: "do_while_loop"
+      condition: "{{ do_while_counter < 3 }}"
+      steps:
+        - id: "loop_step_5"
+          name : "Print do-while loop counter"
+          type: "system_command"
+          command: "echo 'do-while loop iteration : {{ do_while_counter }}'"
+        - id: "loop_step_6"
+          name: "Increment do-while counter variable"
+          type: "increment_variable"
+          variable: "do_while_counter"
+          amount: 1
+    - id: "step_4"
+      name: "Final Message"
+      type: "system_command"
+      command: "echo 'Finished all loops!'"

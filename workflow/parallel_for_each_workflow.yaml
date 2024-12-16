@@ -1,0 +1,28 @@
+workflow:
+  name: "Workflow with List-Based Branching"
+  description: "Demonstrates parallel processing of a list"
+  steps:
+    - id: "step_1"
+      name: "Get User IDs"
+      type: "system_command"
+      command: "echo 'user1,user2,user3'"
+
+    - id: "branch_1"
+      name: "Process each user"
+      type: "parallel_for_each"
+      list_source: "{{step_1.output.split(',')}}"
+      item_variable: "user_id"
+      steps:
+        - id: "branch_step_1"
+          name: "send email to each user"
+          type: "notification"
+          message: "Sending email to user {{ user_id }}"
+
+
+    - id: "step_2"
+      name: "All emails sent"
+      type: "system_command"
+      command: "echo 'Email for all users have been sent!'"
+
+
+      

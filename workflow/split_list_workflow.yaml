@@ -1,0 +1,44 @@
+workflow:
+  name: "Workflow with List Splitting and Parallel Processing"
+  description: "Demonstrates list splitting and parallel processing"
+
+  steps:
+    - id: "step_1"
+      name: "Get a list of items"
+      type: "system_command"
+      command: "echo 'item1,item2,item3,item4,item5,item6,item7,item8,item9,item10'"
+
+    - id: "split_1"
+      name: "Split the list into groups"
+      type: "split_list"
+      list_source: "{{ step_1.output.split(',') }}"
+      groups:
+        group_a: 30
+        group_b: 70
+
+    - id: "process_groups"
+      name: "Process each group"
+      type: "parallel_for_each"
+      list_source: "{{ split_1.output_groups }}"
+      item_variable: "group"
+      steps:
+        - id: "branch_step_1"
+          name: "Log the group id and items"
+          type: "system_command"
+          command: "echo 'Group: {{ group.id }}, Items: {{ group.items }}'"
+
+        - id: "branch_step_2"
+          name: "Process each item of a group"
+          type: "parallel_for_each"
+          list_source: "{{ group.items }}"
+          item_variable: "item"
+          steps:
+           - id: "branch_step_3"
+               name: "Process an item"
+               type: "notification"
+               message: "Processing item {{item}}"
+
+    - id: "step_2"
+      name: "All Items Processed"
+      type: "system_command"
+      command: "echo 'All items have been processed'"
