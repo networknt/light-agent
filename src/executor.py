@@ -200,7 +200,11 @@ class WorkflowExecutor:
             else:
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = process.communicate()
-                if stderr:
+                if "docker compose down" in command:
+                    if stderr:
+                        self.logger.warning(f"docker compose down stderr: {stderr.strip()}")
+                    self.logger.info(f"docker compose down stdout: {stdout.strip()}")
+                elif stderr:
                     self.logger.warning(f"System command stderr: {stderr.strip()}")
                 self.logger.info(f"System command stdout: {stdout.strip()}")
 
