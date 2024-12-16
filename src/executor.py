@@ -188,6 +188,8 @@ class WorkflowExecutor:
         self.logger.info(f"Executing system command: {command}")
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout = ""
+            stderr = ""
             if command.strip().endswith("&"):
                 # Do not read stdout or stderr for background processes
                 self.logger.info(f"Background process started, not reading output")
