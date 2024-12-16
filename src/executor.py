@@ -11,10 +11,11 @@ from utils import create_directory
 
 
 class WorkflowExecutor:
-    def __init__(self, api_key, output_dir, log_dir):
+    def __init__(self, api_key, output_dir, log_dir, sudo_password=None):
         self.api_key = api_key
         self.output_dir = output_dir
         self.log_dir = log_dir
+        self.sudo_password = sudo_password
         self.context = {}
         genai.configure(api_key=self.api_key)
 
@@ -197,6 +198,12 @@ class WorkflowExecutor:
                 self.logger.info(f"Background process started, output redirected to {log_file}")
                 stdout = ""
                 stderr = ""
+            elif command.startswith("sudo "):
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = process.communicate(input=self.sudo_password.encode() + b'\n')
+                if stderr:
+                    self.logger.warning(f"Sudo command stderr: {stderr.strip()}")
+                self.logger.info(f"Sudo command stdout: {stdout.strip()}")
             else:
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = process.communicate()
