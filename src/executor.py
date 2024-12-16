@@ -196,6 +196,7 @@ class WorkflowExecutor:
             if step.get('id'):
                 self.context[step.get('id') + '.output'] = stdout.strip()
 
+
         except Exception as e:
             self.logger.error(f"Error executing system command: {e}")
 
