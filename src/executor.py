@@ -47,6 +47,7 @@ class WorkflowExecutor:
 
     def execute_workflow(self, workflow_file):
         self.logger.info(f"Starting workflow execution for {workflow_file}")
+        self.context['counter'] = 0 # Initialize the counter variable
         try:
             with open(workflow_file, 'r') as f:
                 self.workflow_data = yaml.safe_load(f)
