@@ -11,17 +11,17 @@ workflow:
       type: "system_command"
       command: "echo 'Step 1 executed'"
     - id: "condition_1"
-        type: "condition"
-        condition: "{{ counter < 3}}" # need to create the counter before using this step
-        then :
-          - id: "goto_label_1"
-            type: "goto"
-            target: "label_1"
-        else :
-            - id: "step_2"
-              name: "Else part"
-              type: "system_command"
-              command: "echo 'Step 2 Executed'"
+      type: "condition"
+      condition: "{{ counter < 3}}" # need to create the counter before using this step
+      then :
+        - id: "goto_label_1"
+          type: "goto"
+          target: "label_1"
+      else :
+        - id: "step_2"
+          name: "Else part"
+          type: "system_command"
+          command: "echo 'Step 2 Executed'"
     - id: "label_1"
       name: "Label 1"
       type: "label"
