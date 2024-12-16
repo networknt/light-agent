@@ -188,7 +188,11 @@ class WorkflowExecutor:
         self.logger.info(f"Executing system command: {command}")
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout, stderr = process.communicate()
+            if "docker compose up" in command:
+                stdout = process.stdout.read()
+                stderr = process.stderr.read()
+            else:
+                stdout, stderr = process.communicate()
             if stderr:
                 self.logger.warning(f"System command stderr: {stderr.strip()}")
             self.logger.info(f"System command stdout: {stdout.strip()}")
