@@ -75,6 +75,8 @@ class WorkflowExecutor:
                   self._execute_system_command(step)
            if step_id:
               self.context[step_id + '.output'] = self.context.get(step_id + '.output',"") # Update the context before execution
+           elif step_type == 'parallel_for_each':
+              self._update_context_before_step(step)
            if step_type == 'browser_action':
                  self._execute_browser_action(step)
            elif step_type == 'system_command':
@@ -106,11 +108,20 @@ class WorkflowExecutor:
            elif step_type == 'split_list':
               self._execute_split_list(step)
            elif step_type == 'label':
-              pass #do nothing           
+              pass #do nothing
            else:
               self.logger.warning(f"Unsupported step type: {step_type}")
          except Exception as e:
            self.logger.error(f"Error executing step {step_id} : {e}")
+    def _update_context_before_step(self,step):
+        steps = self.workflow_data.get('workflow', {}).get('steps', [])
+        for index, workflow_step in enumerate(steps):
+            if workflow_step.get('id') == step.get('id'):
+                if index > 0:
+                    previous_step = steps[index-1]
+                    if previous_step.get('id'):
+                        self.context[previous_step.get('id') + '.output'] = self.context.get(previous_step.get('id') + '.output',"")
+                break
 
     def _execute_browser_action(self, step):
         action = step.get('action')
