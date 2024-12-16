@@ -69,6 +69,10 @@ class WorkflowExecutor:
          try:
            if step_id:
               self.context[step_id + '.output'] = "" # Initialize the output in context before execution
+           if step_type == 'system_command':
+                  self._execute_system_command(step)
+           if step_id:
+              self.context[step_id + '.output'] = self.context.get(step_id + '.output',"") # Update the context before execution
            if step_type == 'browser_action':
                  self._execute_browser_action(step)
            elif step_type == 'system_command':
