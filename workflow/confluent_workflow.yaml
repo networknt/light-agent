@@ -73,7 +73,7 @@ workflow:
       name: "Docker compose down"
       type: "system_command"
       directory: "~/lightapi/portal-config-loc/light-scheduler"
-      command: "docker compose down"
+      command: "docker compose down --remove-orphans"
 
     - id: "step_13"
       name: "Docker compose up"
@@ -91,7 +91,7 @@ workflow:
       name: "Docker compose down"
       type: "system_command"
       directory: "~/lightapi/portal-config-loc/light-portal"
-      command: "docker compose down"
+      command: "docker compose down --remove-orphans"
 
     - id: "step_16"
       name: "Docker compose up"
