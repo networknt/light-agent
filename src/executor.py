@@ -49,15 +49,19 @@ class WorkflowExecutor:
         self.logger.info(f"Starting workflow execution for {workflow_file}")
         try:
             with open(workflow_file, 'r') as f:
-                workflow_data = yaml.safe_load(f)
+                self.workflow_data = yaml.safe_load(f)
         except FileNotFoundError:
             self.logger.error(f"Workflow file not found: {workflow_file}")
             return
 
-        steps = workflow_data.get('workflow', {}).get('steps', [])
-        for step in steps:
+        steps = self.workflow_data.get('workflow', {}).get('steps', [])
+        self.current_step_index = 0; # reset the current step index
+        while self.current_step_index < len(steps):
+             step = steps[self.current_step_index]
              self.logger.info(f"Executing step: {step.get('name', step.get('id', ''))}")
              self._execute_step(step)
+             if step.get('type') != 'goto':
+                 self.current_step_index +=1 # Increment only if it is not a goto step.
 
     def _execute_step(self, step):
          step_type = step.get('type')
@@ -75,8 +79,22 @@ class WorkflowExecutor:
                self._execute_condition(step)
            elif step_type == 'notification':
                 self._execute_notification(step)
+           elif step_type == 'for_loop':
+                self._execute_for_loop(step)
+           elif step_type == 'while_loop':
+                self._execute_while_loop(step)
+           elif step_type == 'do_while_loop':
+               self._execute_do_while_loop(step)
+           elif step_type == 'set_variable':
+               self._execute_set_variable(step)
+           elif step_type == 'increment_variable':
+               self._execute_increment_variable(step)
+           elif step_type == 'goto':
+              self._execute_goto(step)
+           elif step_type == 'label':
+              pass #do nothing           
            else:
-                self.logger.warning(f"Unsupported step type: {step_type}")
+              self.logger.warning(f"Unsupported step type: {step_type}")
          except Exception as e:
            self.logger.error(f"Error executing step {step_id} : {e}")
 
@@ -197,3 +215,71 @@ class WorkflowExecutor:
            print(f"Notification Sent: {message}")
        except Exception as e:
               self.logger.error(f"Error sending notification message : {e}")
+    def _execute_for_loop(self, step):
+        loop_variable = step.get('variable')
+        start = int(step.get('start'))
+        end = int(step.get('end'))
+        increment = int(step.get('increment'))
+        loop_steps = step.get('steps', [])
+        self.logger.info(f"Executing for loop with {loop_variable}, start: {start}, end:{end}, increment: {increment}")
+        for i in range(start, end, increment):
+            self.context[loop_variable] = i
+            for loop_step in loop_steps:
+                self._execute_step(loop_step)
+
+
+    def _execute_while_loop(self, step):
+          condition = self._resolve_template(step.get('condition'))
+          loop_steps = step.get('steps',[])
+          self.logger.info(f"Executing while loop with condition: {condition}")
+          try:
+               while eval(condition):
+                   for loop_step in loop_steps:
+                      self._execute_step(loop_step)
+                   condition = self._resolve_template(step.get('condition'))  # Refresh the condition after loop iteration.
+               self.logger.info(f"While loop terminated with condition {condition} becoming false")
+          except Exception as e:
+             self.logger.error(f"Error while loop execution: {e}")
+
+
+    def _execute_do_while_loop(self, step):
+        condition = self._resolve_template(step.get('condition'))
+        loop_steps = step.get('steps', [])
+        self.logger.info(f"Executing do-while loop with condition: {condition}")
+
+        try:
+            while True:
+              for loop_step in loop_steps:
+                self._execute_step(loop_step)
+              condition = self._resolve_template(step.get('condition')) # Refresh the condition after loop iteration.
+              if not eval(condition):
+                  break
+            self.logger.info(f"Do-while loop terminated with condition {condition} becoming false")
+
+        except Exception as e:
+             self.logger.error(f"Error do-while loop execution: {e}")
+
+    def _execute_set_variable(self, step):
+        variable = step.get('variable')
+        value = self._resolve_template(step.get('value'))
+        self.logger.info(f"Setting variable: {variable} to value {value}")
+        self.context[variable] = value
+
+    def _execute_increment_variable(self, step):
+        variable = step.get('variable')
+        amount = int(step.get('amount'))
+        self.logger.info(f"Incrementing variable: {variable} by {amount}")
+        if variable in self.context:
+           self.context[variable] = int(self.context[variable]) + amount
+        else:
+            self.logger.warning(f"Variable not set {variable} and set to default value 0")
+            self.context[variable] = amount
+    def _execute_goto(self, step):
+        target = step.get('target')
+        self.logger.info(f"Executing goto : {target}")
+        steps = self.workflow_data.get('workflow', {}).get('steps', [])
+        for index,workflow_step in enumerate(steps):
+          if workflow_step.get('id') == target:
+              self.current_step_index = index
+              return
+        self.logger.warning(f"Goto target {target} not found in the workflow")
