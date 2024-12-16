@@ -47,7 +47,6 @@ class WorkflowExecutor:
 
     def execute_workflow(self, workflow_file):
         self.logger.info(f"Starting workflow execution for {workflow_file}")
-        self.context['counter'] = 0 # Initialize the counter variable
         try:
             with open(workflow_file, 'r') as f:
                 self.workflow_data = yaml.safe_load(f)
@@ -92,6 +91,14 @@ class WorkflowExecutor:
                self._execute_increment_variable(step)
            elif step_type == 'goto':
               self._execute_goto(step)
+           elif step_type == 'parallel_for_each':
+             self._execute_parallel_for_each(step)
+           elif step_type == 'parallel_and_branch':
+              self._execute_parallel_and_branch(step)
+           elif step_type == 'parallel_or_branch':
+              self._execute_parallel_or_branch(step)
+           elif step_type == 'split_list':
+              self._execute_split_list(step)
            elif step_type == 'label':
               pass #do nothing           
            else:
@@ -284,3 +291,83 @@ class WorkflowExecutor:
               self.current_step_index = index
               return
         self.logger.warning(f"Goto target {target} not found in the workflow")
+
+    def _execute_split_list(self, step):
+         list_source = self._resolve_template(step.get('list_source'))
+         if isinstance(list_source, str) :
+             self.logger.warning(f"list_source is a string rather than list")
+             list_source = [list_source]
+         groups = step.get('groups',{})
+         self.logger.info(f"Spliting the list into groups {groups}")
+         group_list = self._split_list_by_percentage(list_source,groups)
+         self.context[step.get('id') + '.output_groups'] = group_list # add to the context for future steps
+
+    def _split_list_by_percentage(self, items, group_percentages):
+         shuffled_items = list(items)
+         random.shuffle(shuffled_items)
+
+         total_items = len(shuffled_items)
+         groups = []
+         start = 0
+         for group_id, percentage in group_percentages.items():
+             num_items = int((percentage / 100) * total_items)
+             end = start + num_items
+             group_items = shuffled_items[start:end]
+             groups.append({"id": group_id, "items": group_items})
+             start = end
+
+         # Add remaining items to the last group
+         if start < total_items:
+             last_group = groups[-1]
+             remaining_items = shuffled_items[start:]
+             last_group["items"].extend(remaining_items)
+
+
+         return groups
+    def _execute_parallel_for_each(self, step):
+        list_source = self._resolve_template(step.get('list_source'))
+        item_variable = step.get('item_variable')
+        loop_steps = step.get('steps',[])
+        self.logger.info(f"Executing parallel for each step")
+        if isinstance(list_source, str) :
+            self.logger.warning(f"list_source is a string rather than list")
+            list_source = [list_source]
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = []
+            for item in list_source:
+                self.context[item_variable] = item
+                future = executor.submit(self._execute_steps_list_in_branch,loop_steps)
+                futures.append(future)
+            concurrent.futures.wait(futures) # Wait for all threads to finish.
+
+    def _execute_parallel_and_branch(self, step):
+        branches = step.get('branches',[])
+        self.logger.info(f"Executing parallel and branches ")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = []
+            for branch in branches:
+                branch_steps = branch.get('steps',[])
+                future = executor.submit(self._execute_steps_list_in_branch,branch_steps)
+                futures.append(future)
+            concurrent.futures.wait(futures) # Wait for all threads to finish.
+
+    def _execute_parallel_or_branch(self, step):
+         branches = step.get('branches',[])
+         self.logger.info(f"Executing parallel or branches ")
+         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                futures = []
+                for branch in branches:
+                    branch_steps = branch.get('steps',[])
+                    future = executor.submit(self._execute_steps_list_in_branch,branch_steps)
+                    futures.append(future)
+                done, _ = concurrent.futures.wait(futures, return_when = concurrent.futures.FIRST_COMPLETED) # Wait for the first thread to complete
+                self.logger.info(f"At least one branch has completed execution")
+
+
+    def _execute_steps_list_in_branch(self, steps):
+        try:
+          for step in steps:
+             self._execute_step(step)
+        except Exception as e:
+              self.logger.error(f"Error with branch execution: {e}")
