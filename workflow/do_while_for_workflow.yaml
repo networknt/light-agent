@@ -1,4 +1,6 @@
 workflow:
+  id: "8Ieg7wgNTIqTogO1g9dOcA"
+  version: "1.0.0"
   name: "Workflow with Loops"
   description: "Demonstrates loops and conditional steps"
 

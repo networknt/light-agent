@@ -98,3 +98,34 @@ workflow:
       type: "system_command"
       directory: "~/lightapi/portal-config-loc/light-portal"
       command: "nohup docker compose up &"
+
+    - id: "step_17"
+      name: "Docker compose down"
+      type: "system_command"
+      directory: "~/lightapi/portal-config-loc/oauth-kafka"
+      command: "docker compose down --remove-orphans"
+
+    - id: "step_18"
+      name: "Docker compose up"
+      type: "system_command"
+      directory: "~/lightapi/portal-config-loc/oauth-kafka"
+      command: "nohup docker compose up &"
+
+    - id: "step_19"
+      name: "Docker compose down"
+      type: "system_command"
+      directory: "~/lightapi/portal-config-loc/light-gateway"
+      command: "docker compose down --remove-orphans"
+
+    - id: "step_20"
+      name: "Docker compose up"
+      type: "system_command"
+      directory: "~/lightapi/portal-config-loc/light-gateway"
+      command: "nohup docker compose up &"
+
+
+    - id: "step_21"
+      name: "Port Rediret"
+      type: "system_command"
+      directory: "~/"
+      command: "sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -o lo -j REDIRECT --to-port 8443"

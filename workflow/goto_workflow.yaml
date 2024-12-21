@@ -1,4 +1,6 @@
 workflow:
+  id: "wkCPtCkGTt61sDdHETmaTQ"
+  version: "1.0.0"
   name: "Workflow with Goto"
   description: "Demonstrates the usage of goto functionality"
   steps:

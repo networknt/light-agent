@@ -1,4 +1,6 @@
 workflow:
+  id: "JMuGAfDnTney90OGQ5XJGg"
+  version: "1.0.0"
   name: "Workflow with List Splitting and Parallel Processing"
   description: "Demonstrates list splitting and parallel processing"
 

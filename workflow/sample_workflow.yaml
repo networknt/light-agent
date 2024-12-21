@@ -1,4 +1,6 @@
 workflow:
+  id: "fOzyj7z7RAu9w3ixuEfr8g"
+  version: "1.0.0"
   name: "My Automation Workflow"
   description: "A workflow to automate tasks on a website and analyze results"
 
