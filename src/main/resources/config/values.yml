@@ -1,0 +1,35 @@
+# server.yml
+server.serverId: com.networknt.light-agent-1.0.0
+server.httpPort: 8080
+server.enableHttp: true
+server.enableHttps: false
+
+# service.yml
+service.singletons:
+  - com.networknt.genai.GenAiClient:
+    - com.networknt.genai.ollama.OllamaClient
+  - com.networknt.genai.handler.AgentRepository:
+    - com.networknt.genai.handler.ConfigAgentRepository
+
+# handler.yml
+handler.handlers:
+  - com.networknt.websocket.handler.WebSocketHandler@websocket
+
+handler.chains:
+  default:
+    - websocket
+
+handler.paths:
+  - path: '/chat'
+    method: 'GET'
+    exec:
+      - websocket
+
+# websocket-handler.yml
+websocket-handler.enabled: true
+websocket-handler.pathPrefixHandlers:
+  /chat: com.networknt.genai.handler.GenAiWebSocketHandler
+
+# ollama.yml
+ollama.ollamaUrl: http://localhost:11434
+ollama.model: qwen3:14b

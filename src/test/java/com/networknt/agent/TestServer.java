@@ -1,0 +1,87 @@
+/*
+ * Copyright (c) 2026 Network New Technologies Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.networknt.agent;
+
+import com.networknt.server.Server;
+import com.networknt.server.ServerConfig;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class TestServer implements BeforeAllCallback, AfterAllCallback {
+    static final Logger logger = LoggerFactory.getLogger(TestServer.class);
+
+    private static final AtomicInteger refCount = new AtomicInteger(0);
+    private static Server server;
+
+    private static final TestServer instance  = new TestServer();
+
+    public static TestServer getInstance () {
+        return instance;
+    }
+
+    private TestServer() {
+
+    }
+
+    public ServerConfig getServerConfig() {
+        return ServerConfig.getInstance();
+    }
+
+    public void restartServer() {
+        try {
+            if (refCount.get() == 0) {
+                Server.start();
+            }
+        }
+        finally {
+            refCount.getAndIncrement();
+        }
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) {
+        try {
+            if (refCount.get() == 0) {
+                Server.start();
+                logger.info("TestServer is started");
+            }
+        }
+        finally {
+            refCount.getAndIncrement();
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> clean()));
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) {
+        clean();
+    }
+
+    protected void clean() {
+        refCount.getAndDecrement();
+        if (refCount.get() == 0) {
+            Server.stop();
+            logger.info("TestServer is stopped");
+        }
+    }
+
+}

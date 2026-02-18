@@ -1,0 +1,78 @@
+<configuration>
+    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+        <Marker>PROFILER</Marker>
+        <OnMatch>NEUTRAL</OnMatch>
+    </turboFilter>
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%thread] %X{sId} %X{cId} %-5level %class{36}:%L %M - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="stdout-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>log/stdout.log.json</file>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>timestamp</fieldName>
+                    <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "thread": "%thread",
+                        "level": "%-5level",
+                        "logger": "%logger{64}",
+                        "correlationId": "%X{cId}",
+                        "serviceId": "%X{sId}",
+                        "class": "%F",
+                        "lineNumber": "%class{64}:%L",
+                        "method": "%M",
+                        "logMessage": "#tryJson{%message}"
+                        }
+                    </pattern>
+                </pattern>
+                <rootStackTraceElement/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>log/stdout.log.json.%i.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>5</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>200MB</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+    <appender name="audit" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>log/audit.json</file>
+        <encoder>
+            <pattern>%date{ISO8601} %msg%n</pattern>
+            <immediateFlush>true</immediateFlush>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>log/audit.json.%i.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>5</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>200MB</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <root level="error">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="stdout-file"/>
+    </root>
+
+    <logger name="com.networknt" level="trace" additivity="false">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="stdout-file"/>
+    </logger>
+
+    <logger name="Audit" level="info" additivity="false">
+        <appender-ref ref="audit"/>
+    </logger>
+
+</configuration>
